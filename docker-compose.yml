@@ -1,0 +1,73 @@
+---
+services:
+  netbox:
+    image: docker.io/netboxcommunity/netbox:v4.2-3.2.0
+    depends_on:
+      - postgres
+      - redis
+      - redis-cache
+    user: "unit:root"
+    ports:
+      - 8000:8080
+    healthcheck:
+      start_period: 300s
+      timeout: 3s
+      interval: 15s
+      test: curl -f http://localhost:8080/login/ || exit 1
+    environment:
+      DB_HOST: postgres
+      DB_NAME: &postgres_db netbox
+      DB_PASSWORD: &postgres_password J5brHrAXFLQSif0K
+      DB_USER: &postgres_user netbox
+      REDIS_CACHE_DATABASE: 1
+      REDIS_CACHE_HOST: redis-cache
+      REDIS_CACHE_INSECURE_SKIP_TLS_VERIFY: "false"
+      REDIS_CACHE_PASSWORD: &redis_cache_password t4Ph722qJ5QHeQ1qfu36
+      REDIS_CACHE_SSL: "false"
+      REDIS_DATABASE: 0
+      REDIS_HOST: redis
+      REDIS_INSECURE_SKIP_TLS_VERIFY: "false"
+      REDIS_PASSWORD: &redis_password H733Kdjndks81
+      REDIS_SSL: "false"
+      SECRET_KEY: "r(m)9nLGnz$$(_q3N4z1k(EFsMCjjjzx08x9VhNVcfd%6RF#r!6DE@+V5Zk2X"
+      DB_WAIT_DEBUG: "1"
+  # postgres
+  postgres:
+    image: docker.io/postgres:17-alpine
+    healthcheck:
+      test: pg_isready -q -t 2 -d $$POSTGRES_DB -U $$POSTGRES_USER
+      start_period: 20s
+      timeout: 30s
+      interval: 10s
+      retries: 5
+    environment:
+      POSTGRES_DB: *postgres_db
+      POSTGRES_PASSWORD: *postgres_password
+      POSTGRES_USER: *postgres_user
+
+  # redis
+  redis:
+    image: &redis-image docker.io/valkey/valkey:8.0-alpine
+    command:
+      - sh
+      - -c # this is to evaluate the $REDIS_PASSWORD from the env
+      - redis-server --appendonly yes --requirepass $$REDIS_PASSWORD ## $$ because of docker-compose
+    environment:
+      REDIS_PASSWORD: *redis_password
+    healthcheck: &redis-healthcheck
+      test: '[ $$(valkey-cli --pass "$${REDIS_PASSWORD}" ping) = ''PONG'' ]'
+      start_period: 5s
+
+      timeout: 3s
+      interval: 1s
+      retries: 5
+
+  redis-cache:
+    image: *redis-image
+    healthcheck: *redis-healthcheck
+    command:
+      - sh
+      - -c # this is to evaluate the $REDIS_PASSWORD from the env
+      - redis-server --requirepass $$REDIS_PASSWORD ## $$ because of docker-compose
+    environment:
+      REDIS_PASSWORD: *redis_cache_password

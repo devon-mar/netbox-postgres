@@ -1,0 +1,5 @@
+---
+services:
+  postgres:
+    image: netbox-postgres
+    pull_policy: never

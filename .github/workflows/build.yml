@@ -1,0 +1,75 @@
+---
+name: Build Container
+
+"on":
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  container:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start NetBox
+        run: docker compose up --wait
+
+      - name: Make sure NetBox is accessible
+        run: curl --fail http://localhost:8000/login/
+
+      - name: Stop NetBox
+        run: docker compose stop netbox
+
+      - name: Dump the database
+        # https://github.com/netbox-community/netbox-docker/wiki/Troubleshooting
+        run: docker compose exec -T postgres sh -c 'pg_dump -U $POSTGRES_USER $POSTGRES_DB | gzip' > netbox-dump.sql.gz
+
+      - name: Build the container image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: netbox-postgres
+
+      - name: Remove existing containers
+        run: docker compose down -v
+
+      - name: Start NetBox with the built continaer
+        run: docker compose -f docker-compose.yml -f docker-compose.test.yml up --wait
+
+      - name: Get the NetBox version
+        run: curl --fail https://demo.netbox.dev/api/status/ | jq -r '"NETBOX_VERSION=" + ."netbox-version"' >> "$GITHUB_ENV"
+
+      - name: Login to GitHub Container Registry
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,value=${{ env.NETBOX_VERSION }},pattern=v{{version}}
+            type=semver,value=${{ env.NETBOX_VERSION }},pattern=v{{major}}.{{minor}}
+
+      - name: Build and push
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Show docker compose logs on failure
+        if: failure()
+        run: docker compose logs
