@@ -3,3 +3,10 @@ services:
   postgres:
     image: netbox-postgres
     pull_policy: never
+  netbox:
+    environment:
+      SKIP_SUPERUSER: "false"
+      SUPERUSER_API_TOKEN: "0123456789abcdef0123456789abcdef01234567"
+      SUPERUSER_EMAIL: "admin"
+      SUPERUSER_NAME: "admin"
+      SUPERUSER_PASSWORD: "admin"

@@ -42,7 +42,8 @@ jobs:
         run: docker compose -f docker-compose.yml -f docker-compose.test.yml up --wait
 
       - name: Get the NetBox version
-        run: curl --fail https://demo.netbox.dev/api/status/ | jq -r '"NETBOX_VERSION=" + ."netbox-version"' >> "$GITHUB_ENV"
+        run: |
+          curl --fail http://localhost:8000/api/status/ --header "Authorization: Token 0123456789abcdef0123456789abcdef01234567" | jq -r '"NETBOX_VERSION=" + ."netbox-version"' >> "$GITHUB_ENV"
 
       - name: Login to GitHub Container Registry
         if: ${{ github.event_name != 'pull_request' }}
