@@ -29,7 +29,7 @@ jobs:
         run: docker compose exec -T postgres sh -c 'pg_dump -U $POSTGRES_USER $POSTGRES_DB | gzip' > netbox-dump.sql.gz
 
       - name: Build the container image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           load: true
@@ -64,7 +64,7 @@ jobs:
 
       - name: Build and push
         if: ${{ github.event_name != 'pull_request' }}
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
