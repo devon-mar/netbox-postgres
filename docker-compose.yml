@@ -1,12 +1,12 @@
 ---
 services:
   netbox:
-    image: docker.io/netboxcommunity/netbox:v4.4.5
+    image: docker.io/netboxcommunity/netbox:v4.5.8
     depends_on:
       - postgres
       - redis
       - redis-cache
-    user: "unit:root"
+    user: "netbox:root"
     ports:
       - 8000:8080
     healthcheck:
