@@ -6,7 +6,7 @@ services:
       - postgres
       - redis
       - redis-cache
-    user: "unit:root"
+    user: "netbox:root"
     ports:
       - 8000:8080
     healthcheck:
