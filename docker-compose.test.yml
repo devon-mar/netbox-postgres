@@ -5,8 +5,10 @@ services:
     pull_policy: never
   netbox:
     environment:
+      API_TOKEN_PEPPER_1: "kp7ht*76fiQAhUi5dHfASLlYUE_S^gI^(7J^K5M!LfoH@vl&b_"
       SKIP_SUPERUSER: "false"
-      SUPERUSER_API_TOKEN: "0123456789abcdef0123456789abcdef01234567"
+      SUPERUSER_API_KEY: "haiweeni2Aiv"
+      SUPERUSER_API_TOKEN: "ahgeechahdaighah6queivoo6ahChahgo2ohch9inahyei5ahk"
       SUPERUSER_EMAIL: "admin"
       SUPERUSER_NAME: "admin"
       SUPERUSER_PASSWORD: "admin"
