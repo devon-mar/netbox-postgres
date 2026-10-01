@@ -43,6 +43,7 @@ jobs:
 
       - name: Get the NetBox version
         run: |
+          set -o pipefail
           curl --fail http://localhost:8000/api/status/ --header "Authorization: Token 0123456789abcdef0123456789abcdef01234567" | jq -r '"NETBOX_VERSION=" + ."netbox-version"' >> "$GITHUB_ENV"
 
       - name: Login to GitHub Container Registry
